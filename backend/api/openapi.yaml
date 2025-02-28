@@ -1,0 +1,140 @@
+#
+# CSE186 Assignment 7 Backend
+#
+
+openapi: '3.0.3'
+
+info:
+  description: CSE186 Assignment 7 Backend
+  version: 0.2.0
+  title: CSE186 Assignment 7 Backend
+
+servers:
+  - url: http://localhost:3010/api/v0
+
+paths:
+  /mail:
+    get:
+      description: Get emails from a specific mailbox
+      parameters:
+        - name: mailbox
+          in: query
+          description: Mail in a mailbx.
+          required: false
+          schema:
+            type: string
+            nullable: true
+          allowEmptyValue: true
+      responses:
+        200:
+          description: All email as array
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Mail'
+        404:
+          description: Mailbox not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse" 
+  /mailbox:
+    get:
+      description: Get mailbox name from all mailboxes
+      responses:
+        200:
+          description: All email as array
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        404:
+          description: Mailbox not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /mail/{id}:
+    put:
+      summary: Move an email to another mailbox
+      description: Move an email to a specified mailbox. Creates the mailbox if it doesn't exist.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique email identifier (UUID).
+          schema:
+            type: string
+        - name: mailbox
+          in: query
+          required: true
+          description: Name of the target mailbox.
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Email moved successfully.
+        "404":
+          description: Invalid email ID or email not found or missing mailbox parameter.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Cannot move to "sent" unless the email is already in "sent".
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    Mail:
+      type: object
+      properties:
+        mail:
+          type: array
+          description: Mail in a mailbox
+          items:
+            $ref: "#/components/schemas/EmailWithoutContent"
+    EmailWithoutContent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        to:
+          type: object
+          properties:
+            name:
+              type: string
+            email:
+              type: string
+              format: email
+        from:
+          type: object
+          properties:
+            name:
+              type: string
+            email:
+              type: string
+              format: email
+        sent:
+          type: string
+          format: date-time
+        subject:
+          type: string
+        received:
+          type: string
+          format: date-time
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Mailbox not found"
+ 
